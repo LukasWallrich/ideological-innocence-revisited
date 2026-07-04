@@ -1,7 +1,7 @@
 # Decisions Log — Reproduction & Replication of Kalmoe (2020)
 
 Target: Kalmoe, N. P. (2020). Uses and Abuses of Ideology in Political Psychology.
-*Political Psychology* 42(1), 73–100. doi:10.1111/pops.12650
+*Political Psychology* 41(4), 771–793. doi:10.1111/pops.12650
 FORRT ReplicaTHIS nomination #8 (https://forrt.org/replicatethis/nomination/8/).
 
 Running log of consequential choices made during the project, with rationale.
@@ -93,3 +93,19 @@ Running log of consequential choices made during the project, with rationale.
   given SE clustering language), cluster-robust SEs by year (sandwich/clubSandwich).
 - "Squared continuity correlations" (Table 3) = squared Pearson r between waves
   (per Converse 2000, cited in the paper).
+
+## D9. Publication to GitHub Pages (2026-07-04)
+- Public repo: https://github.com/LukasWallrich/ideological-innocence-revisited
+- Live manuscript: https://lukaswallrich.github.io/ideological-innocence-revisited/
+- Prominent "AI-generated / not yet validated" warning in README (top) AND injected
+  as an on-page banner at deploy time.
+- Anti-drift design: the manuscript HTML lives in exactly one place
+  (manuscript/manuscript.html, committed). A GitHub Action
+  (.github/workflows/deploy-pages.yml) runs scripts/build_pages.py to inject the
+  banner and deploy to Pages on each push that touches the HTML/script/workflow.
+  No second committed copy of the HTML; the published page is always derived from
+  the single source. Pages source = GitHub Actions (build_type=workflow).
+- NOT redistributed (gitignored): raw ANES/GSS microdata (data/raw/), the two large
+  respondent-level intermediates (cdf_analysis.rds, gss_analysis.rds), and the
+  copyrighted Wiley paper + supplement (paper/). knowledge.rds (284K derived quiz
+  index, needed to render) IS included. Data-availability note added to README.
