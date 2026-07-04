@@ -1,0 +1,196 @@
+"table","cell","original","reproduced","diff"
+"Table1","egal_Full",32,32.398,0.398
+"Table1","egal_Lowest",26,28.717,2.717
+"Table1","egal_Low",26,26.063,0.063
+"Table1","egal_Middle",30,30.103,0.103
+"Table1","egal_High",35,34.802,-0.198
+"Table1","egal_Highest",43,43.016,0.016
+"Table1","mt_Full",35,35.226,0.226
+"Table1","mt_Lowest",17,19.909,2.909
+"Table1","mt_Low",25,25.872,0.872
+"Table1","mt_Middle",33,33.746,0.746
+"Table1","mt_High",42,41.631,-0.369
+"Table1","mt_Highest",45,45.243,0.243
+"Table1","policy_Full",18,19.153,1.153
+"Table1","policy_Lowest",11,13.041,2.041
+"Table1","policy_Low",13,14.216,1.216
+"Table1","policy_Middle",16,16.656,0.656
+"Table1","policy_High",21,21.741,0.741
+"Table1","policy_Highest",29,30.017,1.017
+"Table1","ideo_Full",27,27.24,0.24
+"Table1","ideo_Lowest",11,11.185,0.185
+"Table1","ideo_Low",16,15.902,-0.098
+"Table1","ideo_Middle",24,24.101,0.101
+"Table1","ideo_High",34,33.754,-0.246
+"Table1","ideo_Highest",44,44.259,0.259
+"Table1","party_Full",61,61.913,0.913
+"Table1","party_Lowest",41,43.205,2.205
+"Table1","party_Low",55,56.026,1.026
+"Table1","party_Middle",63,63.434,0.434
+"Table1","party_High",66,66.07,0.07
+"Table1","party_Highest",67,66.812,-0.188
+"Table2","egal_alpha_Full",0.67,0.675,0.005
+"Table2","egal_cov_Full",0.1,0.102,0.002
+"Table2","egal_alpha_Lowest",0.5,0.501,0.001
+"Table2","egal_cov_Lowest",0.05,0.051,0.001
+"Table2","egal_alpha_Low",0.53,0.538,0.008
+"Table2","egal_cov_Low",0.06,0.06,0
+"Table2","egal_alpha_Middle",0.64,0.638,-0.002
+"Table2","egal_cov_Middle",0.09,0.088,-0.002
+"Table2","egal_alpha_High",0.73,0.731,0.001
+"Table2","egal_cov_High",0.13,0.126,-0.004
+"Table2","egal_alpha_Highest",0.79,0.796,0.006
+"Table2","egal_cov_Highest",0.17,0.171,0.001
+"Table2","mt_alpha_Full",0.62,0.623,0.003
+"Table2","mt_cov_Full",0.11,0.112,0.002
+"Table2","mt_alpha_Lowest",0.35,0.365,0.015
+"Table2","mt_cov_Lowest",0.04,0.041,0.001
+"Table2","mt_alpha_Low",0.47,0.472,0.002
+"Table2","mt_cov_Low",0.06,0.06,0
+"Table2","mt_alpha_Middle",0.59,0.591,0.001
+"Table2","mt_cov_Middle",0.1,0.097,-0.003
+"Table2","mt_alpha_High",0.68,0.679,-0.001
+"Table2","mt_cov_High",0.14,0.137,-0.003
+"Table2","mt_alpha_Highest",0.73,0.729,-0.001
+"Table2","mt_cov_Highest",0.18,0.182,0.002
+"Table2","policy_alpha_Full",0.64,0.641,0.001
+"Table2","policy_cov_Full",0.08,0.08,0
+"Table2","policy_alpha_Lowest",0.38,0.388,0.008
+"Table2","policy_cov_Lowest",0.03,0.031,0.001
+"Table2","policy_alpha_Low",0.46,0.47,0.01
+"Table2","policy_cov_Low",0.04,0.045,0.005
+"Table2","policy_alpha_Middle",0.58,0.58,0
+"Table2","policy_cov_Middle",0.06,0.065,0.005
+"Table2","policy_alpha_High",0.69,0.694,0.004
+"Table2","policy_cov_High",0.09,0.094,0.004
+"Table2","policy_alpha_Highest",0.8,0.801,0.001
+"Table2","policy_cov_Highest",0.14,0.143,0.003
+"Table4","Egal x MoralTrad(rev) | Full",0.28,0.28,0
+"Table4","Egal x MoralTrad(rev) | Lowest",0.04,0.029,-0.011
+"Table4","Egal x MoralTrad(rev) | Low",0.11,0.108,-0.002
+"Table4","Egal x MoralTrad(rev) | Middle",0.23,0.225,-0.005
+"Table4","Egal x MoralTrad(rev) | High",0.32,0.325,0.005
+"Table4","Egal x MoralTrad(rev) | Highest",0.45,0.449,-0.001
+"Table4","Egal x Policy | Full",0.44,0.444,0.004
+"Table4","Egal x Policy | Lowest",0.27,0.266,-0.004
+"Table4","Egal x Policy | Low",0.29,0.288,-0.002
+"Table4","Egal x Policy | Middle",0.4,0.397,-0.003
+"Table4","Egal x Policy | High",0.51,0.511,0.001
+"Table4","Egal x Policy | Highest",0.59,0.59,0
+"Table4","Egal x IdeoID(rev) | Full",0.35,0.347,-0.003
+"Table4","Egal x IdeoID(rev) | Lowest",0.06,0.068,0.008
+"Table4","Egal x IdeoID(rev) | Low",0.11,0.109,-0.001
+"Table4","Egal x IdeoID(rev) | Middle",0.27,0.263,-0.007
+"Table4","Egal x IdeoID(rev) | High",0.42,0.421,0.001
+"Table4","Egal x IdeoID(rev) | Highest",0.55,0.547,-0.003
+"Table4","Egal x Party(rev) | Full",0.35,0.348,-0.002
+"Table4","Egal x Party(rev) | Lowest",0.11,0.119,0.009
+"Table4","Egal x Party(rev) | Low",0.17,0.176,0.006
+"Table4","Egal x Party(rev) | Middle",0.29,0.292,0.002
+"Table4","Egal x Party(rev) | High",0.42,0.422,0.002
+"Table4","Egal x Party(rev) | Highest",0.52,0.523,0.003
+"Table4","MoralTrad x Policy(rev) | Full",0.29,0.284,-0.006
+"Table4","MoralTrad x Policy(rev) | Lowest",0.03,0.037,0.007
+"Table4","MoralTrad x Policy(rev) | Low",0.13,0.118,-0.012
+"Table4","MoralTrad x Policy(rev) | Middle",0.22,0.218,-0.002
+"Table4","MoralTrad x Policy(rev) | High",0.31,0.312,0.002
+"Table4","MoralTrad x Policy(rev) | Highest",0.49,0.487,-0.003
+"Table4","MoralTrad x IdeoID | Full",0.4,0.397,-0.003
+"Table4","MoralTrad x IdeoID | Lowest",0.08,0.081,0.001
+"Table4","MoralTrad x IdeoID | Low",0.18,0.166,-0.014
+"Table4","MoralTrad x IdeoID | Middle",0.32,0.318,-0.002
+"Table4","MoralTrad x IdeoID | High",0.46,0.459,-0.001
+"Table4","MoralTrad x IdeoID | Highest",0.59,0.584,-0.006
+"Table4","MoralTrad x Party | Full",0.27,0.27,0
+"Table4","MoralTrad x Party | Lowest",0.03,0.043,0.013
+"Table4","MoralTrad x Party | Low",0.08,0.063,-0.017
+"Table4","MoralTrad x Party | Middle",0.21,0.207,-0.003
+"Table4","MoralTrad x Party | High",0.32,0.323,0.003
+"Table4","MoralTrad x Party | Highest",0.48,0.481,0.001
+"Table4","Policy x IdeoID(rev) | Full",0.39,0.392,0.002
+"Table4","Policy x IdeoID(rev) | Lowest",0.05,0.059,0.009
+"Table4","Policy x IdeoID(rev) | Low",0.18,0.181,0.001
+"Table4","Policy x IdeoID(rev) | Middle",0.29,0.285,-0.005
+"Table4","Policy x IdeoID(rev) | High",0.47,0.465,-0.005
+"Table4","Policy x IdeoID(rev) | Highest",0.64,0.635,-0.005
+"Table4","Policy x Party(rev) | Full",0.44,0.424,-0.016
+"Table4","Policy x Party(rev) | Lowest",0.12,0.123,0.003
+"Table4","Policy x Party(rev) | Low",0.22,0.218,-0.002
+"Table4","Policy x Party(rev) | Middle",0.37,0.369,-0.001
+"Table4","Policy x Party(rev) | High",0.5,0.495,-0.005
+"Table4","Policy x Party(rev) | Highest",0.62,0.625,0.005
+"Table4","IdeoID x Party | Full",0.44,0.442,0.002
+"Table4","IdeoID x Party | Lowest",0.06,0.078,0.018
+"Table4","IdeoID x Party | Low",0.17,0.162,-0.008
+"Table4","IdeoID x Party | Middle",0.35,0.352,0.002
+"Table4","IdeoID x Party | High",0.54,0.538,-0.002
+"Table4","IdeoID x Party | Highest",0.68,0.672,-0.008
+"Table5","Egalitarianism_coef_Full",1.58,1.579,-0.001
+"Table5","Egalitarianism_R2_Full",0.15,0.152,0.002
+"Table5","Egalitarianism_coef_Lower",1.03,1.042,0.012
+"Table5","Egalitarianism_R2_Lower",0.05,0.053,0.003
+"Table5","Egalitarianism_coef_Middle",1.32,1.339,0.019
+"Table5","Egalitarianism_R2_Middle",0.1,0.101,0.001
+"Table5","Egalitarianism_coef_High",1.75,1.71,-0.04
+"Table5","Egalitarianism_R2_High",0.19,0.18,-0.01
+"Table5","Egalitarianism_coef_Highest",2,1.996,-0.004
+"Table5","Egalitarianism_R2_Highest",0.28,0.279,-0.001
+"Table5","MoralTrad_coef_Full",1.29,1.287,-0.003
+"Table5","MoralTrad_R2_Full",0.13,0.129,-0.001
+"Table5","MoralTrad_coef_Lower",0.88,0.82,-0.06
+"Table5","MoralTrad_R2_Lower",0.04,0.04,0
+"Table5","MoralTrad_coef_Middle",1.07,1.085,0.015
+"Table5","MoralTrad_R2_Middle",0.08,0.086,0.006
+"Table5","MoralTrad_coef_High",1.29,1.267,-0.023
+"Table5","MoralTrad_R2_High",0.14,0.13,-0.01
+"Table5","MoralTrad_coef_Highest",1.74,1.754,0.014
+"Table5","MoralTrad_R2_Highest",0.26,0.26,0
+"Table5","PolicyViews_coef_Full",2.1,2.054,-0.046
+"Table5","PolicyViews_R2_Full",0.21,0.215,0.005
+"Table5","PolicyViews_coef_Lower",1.38,1.263,-0.117
+"Table5","PolicyViews_R2_Lower",0.08,0.065,-0.015
+"Table5","PolicyViews_coef_Middle",1.75,1.721,-0.029
+"Table5","PolicyViews_R2_Middle",0.14,0.145,0.005
+"Table5","PolicyViews_coef_High",2.35,2.284,-0.066
+"Table5","PolicyViews_R2_High",0.26,0.255,-0.005
+"Table5","PolicyViews_coef_Highest",2.67,2.618,-0.052
+"Table5","PolicyViews_R2_Highest",0.37,0.373,0.003
+"Table5","IdeoID_coef_Full",1.91,1.915,0.005
+"Table5","IdeoID_R2_Full",0.23,0.231,0.001
+"Table5","IdeoID_coef_Lower",0.97,0.94,-0.03
+"Table5","IdeoID_R2_Lower",0.04,0.043,0.003
+"Table5","IdeoID_coef_Middle",1.57,1.568,-0.002
+"Table5","IdeoID_R2_Middle",0.14,0.142,0.002
+"Table5","IdeoID_coef_High",2.12,2.097,-0.023
+"Table5","IdeoID_R2_High",0.29,0.28,-0.01
+"Table5","IdeoID_coef_Highest",2.54,2.579,0.039
+"Table5","IdeoID_R2_Highest",0.43,0.444,0.014
+"Table5","Partisanship_coef_Full",1.81,1.816,0.006
+"Table5","Partisanship_R2_Full",0.49,0.494,0.004
+"Table5","Partisanship_coef_Lower",1.42,1.421,0.001
+"Table5","Partisanship_R2_Lower",0.32,0.312,-0.008
+"Table5","Partisanship_coef_Middle",1.77,1.768,-0.002
+"Table5","Partisanship_R2_Middle",0.47,0.471,0.001
+"Table5","Partisanship_coef_High",1.89,1.875,-0.015
+"Table5","Partisanship_R2_High",0.52,0.526,0.006
+"Table5","Partisanship_coef_Highest",2.11,2.148,0.038
+"Table5","Partisanship_R2_Highest",0.6,0.604,0.004
+"InText","knowledge_HTMA_ideology",0.36,0.396,0.036
+"InText","knowledge_libcon_identifiers",0.63,0.65,0.02
+"InText","policy_DK_rate_min",0.12,0.108,-0.012
+"InText","policy_DK_rate_max",0.15,0.149,-0.001
+"InText","policy_pct_answered_all_five",0.66,0.67,0.01
+"InText","knowledge_DK_3plus",0.32,0.312,-0.008
+"InText","knowledge_answered_all_five",0.63,0.637,0.007
+"InText","r_ideology_vote",0.49,0.502,0.012
+"InText","r_partisanship_vote",0.68,0.756,0.076
+"InText","r_partisanship_vote_leanerfold",0.68,0.693,0.013
+"InText","pct_voters_polar_party",0.62,0.696,0.076
+"InText","pct_voters_outer_ideology",0.28,0.323,0.043
+"InText","pct_polar_party_fullsample",0.62,0.619,-0.001
+"InText","pct_outer_ideology_fullsample",0.28,0.272,-0.008
+"Footnote5","coef_ratio_top_vs_bottom(~2x)",2,2.01,0.01
+"Footnote5","R2_ratio_top_vs_bottom(~5x)",5,5.2,0.2
+"Figure1","ideology_moderate_HTMA_bar(~49%)",49,50,1
+"Figure1","party_StrongDem_bar(~19%)",19,19.6,0.6
+"Figure1","party_Independent_bar(~11%)",11,11.4,0.4

@@ -1,0 +1,46 @@
+name: Deploy manuscript to GitHub Pages
+
+# Publishes manuscript/manuscript.html to Pages, injecting the
+# "AI-generated / not yet validated" banner at deploy time (scripts/build_pages.py).
+# The banner is never committed into the manuscript, and no second copy of the HTML
+# is stored, so the published page cannot drift from the source.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - manuscript/manuscript.html
+      - scripts/build_pages.py
+      - .github/workflows/deploy-pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; newer pushes cancel in-progress runs.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Pages site (inject warning banner)
+        run: python3 scripts/build_pages.py --src manuscript/manuscript.html --out _site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

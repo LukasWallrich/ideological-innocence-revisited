@@ -1,0 +1,1115 @@
+---
+title: "Ideological Innocence, Revisited"
+subtitle: "A Computational Reproduction and New-Data Replication of Kalmoe (2020) — FORRT ReplicaTHIS Nomination #8"
+author: "Lukas Wallrich"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    embed-resources: true
+    theme: cosmo
+    fig-width: 8
+    fig-height: 5
+    tbl-cap-location: top
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+bibliography: references.bib
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+# Anchor here() to the project root regardless of render location.
+here::i_am("manuscript/manuscript.qmd")
+library(here)
+library(dplyr)
+library(tidyr)
+library(gt)
+library(ggplot2)
+
+# ---- Load all precomputed outputs (the qmd only READS these) ----------------
+# Reproduction (Tables 1,2,4,5, Fig 1, footnote 5, in-text)
+R_t1     <- readRDS(here("output/repro_main/table1.rds"))
+R_t2     <- readRDS(here("output/repro_main/table2.rds"))
+R_t4     <- readRDS(here("output/repro_main/table4.rds"))
+R_t5     <- readRDS(here("output/repro_main/table5.rds"))
+R_intext <- readRDS(here("output/repro_main/intext_stats.rds"))
+R_fn5    <- readRDS(here("output/repro_main/footnote5.rds"))
+R_fig1   <- readRDS(here("output/repro_main/fig1_data.rds"))
+
+# Panels (Table 3)
+P        <- readRDS(here("output/repro_panels/table3.rds"))
+
+# Robustness
+RC1 <- readRDS(here("output/robustness/rc1_polar.rds"))
+RC2 <- readRDS(here("output/robustness/rc2_nonattitude.rds"))
+RC4 <- readRDS(here("output/robustness/rc4_stratifier.rds"))
+RC6 <- readRDS(here("output/robustness/rc6_vote.rds"))
+RC7 <- readRDS(here("output/robustness/rc7_time.rds"))
+
+# Replication (ANES 2020/2024 + panel)
+X_t1   <- readRDS(here("output/replication/table1_breadth.rds"))
+X_t2   <- readRDS(here("output/replication/table2_reliability.rds"))
+X_t4   <- readRDS(here("output/replication/table4_correlations.rds"))
+X_t5   <- readRDS(here("output/replication/table5_vote.rds"))
+X_stab <- readRDS(here("output/replication/table3_stability.rds"))
+X_fig1 <- readRDS(here("output/replication/fig1_distributions.rds"))
+X_opin <- readRDS(here("output/replication/opinionation.rds"))
+X_cmp  <- readRDS(here("output/replication/comparison_fullsample.rds"))
+X_kn   <- readRDS(here("output/replication/knowledge.rds"))
+
+# GSS
+G1 <- readRDS(here("output/gss/analysis1_polar.rds"))
+G2 <- readRDS(here("output/gss/analysis2_reliability.rds"))
+G3 <- readRDS(here("output/gss/analysis3_correlations.rds"))
+G4 <- readRDS(here("output/gss/analysis4_probit.rds"))
+G5 <- readRDS(here("output/gss/analysis5_timetrend.rds"))
+G6 <- readRDS(here("output/gss/analysis6_polviews_dk.rds"))
+
+# Revision analyses (R/07_revision.R), added in response to the peer review
+V_A <- readRDS(here("output/revision/A_sorting_constraint.rds"))     # sorting vs constraint
+V_B <- readRDS(here("output/revision/B_ame_ratios.rds"))             # AME-based H÷L ratios
+V_C <- readRDS(here("output/revision/C_panel_attrition.rds"))        # panel attrition/reweighting
+V_D <- readRDS(here("output/revision/D_breadth_nonattitudes.rds"))   # breadth with/without nonattitudes
+V_E <- readRDS(here("output/revision/E_mode_comparison.rds"))        # 2020 mode comparison
+V_F <- readRDS(here("output/revision/F_small_computations.rds"))     # small computations
+V_G <- readRDS(here("output/revision/G_bootstrap_ratio.rds"))        # bootstrap CI for 2020 ratio
+
+# ---- Formatting + accessor helpers ------------------------------------------
+d1 <- function(x) sprintf("%.1f", x)
+d2 <- function(x) sprintf("%.2f", x)
+pp <- function(x) sprintf("%.0f", x)          # percentage, no decimals
+
+# Reproduction accessors
+t1v <- function(con, col) R_t1[[col]][R_t1$construct == con]
+t2v <- function(con, st, col) R_t2[[col]][R_t2$construct == con & R_t2$stat == st]
+t4v <- function(pr, col) R_t4[[col]][R_t4$pair == pr]
+t5v <- function(pr, st, col) R_t5[[col]][R_t5$predictor == pr & R_t5$stat == st]
+ix  <- function(nm) { s <- R_intext$summary; s$reproduced[s$stat == nm] }
+
+# Replication accessors
+x5 <- function(tbl, pr, st, col) { d <- tbl; d[[col]][d$predictor == pr & d$stat == st] }
+
+# Revision accessors
+va <- function(era, grp, col) V_A[[col]][V_A$era == era & V_A$group == grp]   # Module A cell
+vb <- function(era, pr, col) V_B[[col]][V_B$era == era & V_B$predictor == pr] # Module B cell
+```
+
+## Abstract {.unnumbered}
+
+Kalmoe's [-@kalmoe2020] *Uses and Abuses of Ideology in Political Psychology* argues that
+polar, coherent, stable, and electorally potent ideology characterises only the most
+politically knowledgeable minority of Americans, while partisanship is strong for everyone.
+Responding to a
+FORRT ReplicaTHIS nomination [@forrt_nomination], I computationally reproduce the article's
+public-data analyses, subject them to eight robustness checks, and replicate them in data the
+author never saw: ANES 2020 and 2024 and the 2020&rarr;2024 panel, with a General Social Survey
+(GSS) cross-dataset test. The reproduction is faithful: of 176 table cells, 154 match tightly and
+only five diverge, alongside three documentation-level anomalies. Every substantive conclusion
+survives the robustness suite, though one check reframes the "breadth" statistic as largely an
+expression of how nonattitudes are coded. The replication is two-sided. Mass ideological coherence,
+polarity, stability, and bivariate vote potency all rose sharply, so the "innocence" portrait is
+time-bound as stated. The knowledge gradient then splits by metric: ideological *coherence* stays
+stratified (the low-knowledge floor rose, but a gradient remains), whereas *vote potency*
+compressed sharply. A measure-matched ideology gradient of roughly 10.5&times; in 1988&ndash;92
+falls to about 2.5&times; in 2020 and 2.0&times; in 2024 on pseudo-R², and on the
+average-marginal-effect scale it was already &le;2&times; and now falls below one. However, a
+party-controlled test qualifies this: net of party identification, ideology's *independent* vote
+contribution did not rise overall or at the low-knowledge floor, so the bivariate rise largely
+reflects ideology's growing alignment with party rather than a new stratum of independent
+constraint. Partisanship still dominates every metric, though the gap narrowed. The GSS reproduces
+the depth gradients almost exactly while the breadth gradient does not, an instructive dissociation.
+
+## Introduction
+
+Since Converse's [-@converse1964] account of belief systems in mass publics, political science
+has debated whether ordinary citizens organise their politics ideologically. Kalmoe's [-@kalmoe2020]
+contribution, drawing on the framework of *Neither Liberal nor Conservative* [@kinderkalmoe2017],
+makes a sustained empirical case that they largely do not. Using the ANES Time-Series Cumulative Data
+File and three ANES panels, Kalmoe shows that self-identified ideology and core political values are
+broad, coherent, stable, and predictive of the vote only among the most knowledgeable citizens. The
+stratification he documents is enormous, with highest-to-lowest "info-gain" ratios that range from
+about 1.6&times; to more than 10&times;. Party identification, by contrast, is strong and
+knowledge-robust across the board. The paper closes with four "best practices" for political psychology: stratify by knowledge,
+do not generalise from high-knowledge convenience samples, distinguish ideology from partisanship,
+and treat full-sample estimates as knowledge-conditioned.
+
+The FORRT ReplicaTHIS nomination [@forrt_nomination] asks whether these conclusions are sensitive
+to operationalisation, time period, issue selection, and how the knowledge moderator is measured.
+I address that question with three complementary exercises, each of which answers a different
+question. A **computational reproduction** asks whether the published numbers can be regenerated
+from the same public data and stated methods, and so tests the paper's internal integrity. A
+**robustness analysis** asks whether the conclusions survive defensible alternative choices, and so
+tests their fragility. A **new-data replication** asks whether the findings recur in data the author
+never saw, and so tests their generality and their durability in a changed political era. The
+original had no code or data package [see Methods], so I had to reconstruct the pipeline from the
+paper and its online supplement, adjudicating unstated choices against the anchors the tables
+themselves provide.
+
+## Data and Method
+
+### Data provenance
+
+The reproduction uses the **ANES Time-Series Cumulative Data File**, 1948&ndash;2016 vintage
+(59,944 &times; 1,029), redistributed as an unmodified `.rda` by the `anesr` package. This is the
+release available when Kalmoe submitted the paper, and is therefore a *better* basis for a faithful
+reproduction than a current release, whose recodes could differ [@anes_cdf]. The three panels
+(1990&ndash;92, 1992&ndash;96, 2000&ndash;02) come from the corresponding `anesr` year files. The
+replication uses ANES **2020** ($n = 8{,}280$) and **2024** ($n = 5{,}521$) in cumulative-file
+coding, obtained as a custom subset of the 1948&ndash;2024 ANES Cumulative Data File from SDA
+Berkeley (accessed 2026-07-03; no login), supplemented by the 2024 knowledge battery and the
+2016&ndash;2020&ndash;2024 panel link from the same source [@anes2020; @anes2024]. The GSS test
+uses the **GSS 1972&ndash;2024 Cumulative Datafile** (Release 3, 75,699 respondents), also a
+public SDA Berkeley subset [@gss]. The 1984&ndash;2016 rows appear in both the `anesr` and the SDA
+files, allowing a cross-source integrity check.
+
+### The knowledge moderator and the anchor-based strategy
+
+The paper turns on a single moderator: a **5-point interviewer rating** of each respondent's
+general political information, coded 0/.25/.5/.75/1. It is worth noting that the five knowledge
+groups are the five *fixed rating categories*, whose natural population shares are uneven (roughly
+9/20/34/25/13), not quantiles. Because the original documents no variable codes, item sets,
+weights, or edge-case rules, each unstated choice was adjudicated **empirically against the anchors
+the tables supply**: the construct sample sizes, the published group shares, and the printed
+polar-half percentages. This is not tuning; the anchors identify the author's actual choices. For
+example, the pre-election interviewer rating (`VCF0050a`), with the post-election rating filling
+the four midterm gaps, reproduces Table 1's ideology row *exactly* by group and minimises total
+error across all 30 cells, confirming both the variable and the "pre-preferred" combination.
+
+### Key judgment calls
+
+The consequential choices, condensed from the decisions log and reports, were: (1) the pre-preferred
+combined interviewer rating as moderator, grouped on the five fixed levels; (2) restriction to
+face-to-face and telephone interviews (excluding the 2012/2016 web samples), matching the construct
+$N$s within about 4%; (3) per-table weighting &mdash; Tables 1 and 5 weighted (`VCF0009x`, the
+FTF-sample weight), Figure 1 and Tables 2 and 4 unweighted, exactly as the paper states; (4) the
+polar-half boundary as **inclusive** ($|score| \geq 0.5$), which alone reproduces the value-index
+percentages; (5) ideology "haven't thought much about it" (HTMA) coded with moderates at 0, and
+policy "don't know" coded to the scale midpoint &mdash; the latter independently confirmed by
+Table 2 reliability, not just Table 1; and (6) indices computed as the mean of available items.
+Construct codes were resolved to the specific cumulative-file variables that reproduce the anchors
+(e.g. moral traditionalism is the 5-point agree&ndash;disagree battery `VCF0851`&ndash;`VCF0854`,
+*not* the government-support dichotomies). The replication mirrors this coding exactly, deviating
+only where 2020/2024 data force it (see §5).
+
+### Independent verification
+
+Before any number entered this manuscript, every headline result from all five pipelines was
+**independently recomputed** by a separate verification pass that loaded the raw data directly and
+hand-rolled its own coders rather than re-running the analysis functions. The verification confirmed
+the reproduction cell-by-cell, the panel merges (100% clean joins), the replication construct-coding
+consistency, the stability panel join, and the GSS gradients. It found **one genuine bug**: a
+mislabelled ratio in the replication's vote-stratification headline, where a column computed as
+Full&divide;Lowest was labelled Highest&divide;Lowest, producing a spurious "10.5&rarr;1.7" collapse.
+The corrected, measure-matched Highest&divide;Lowest values (about 2.5 in 2020, 2.0 in 2024) are used
+throughout below; the fix is reported transparently and is documented in the verification record.
+Two further items were relabelling cautions (pairwise versus average correlations; "collapse" versus
+"halving" language), both incorporated here. The verification scripts live in `output/verification/`
+(`v_reproduction.R`, `v_robustness.R`, `v_panels.R`, `v_replication.R`, `v_gss.R`) and are listed in
+the Reproducibility Statement. All five pipelines regenerate byte-identically.
+
+## Reproduction Results
+
+### Fidelity
+
+```{r}
+#| label: tbl-fidelity
+#| tbl-cap: "Reproduction fidelity, banded by absolute cell difference. Cross-sectional tables (1, 2, 4, 5) use the per-table tolerances of §3 (Table 1 ≤1/≤2 pp; Tables 2/4 ≤.01/≤.02; Table 5 coef ≤.05/≤.10, R² ≤.01/≤.02). Panel stability (Table 3) uses fixed r² bands (exact ≤.005 / within .01 / within .02 / beyond), computed from output/repro_panels/comparison.csv."
+pb <- V_F$panel_fidelity_band
+prow <- function(p) as.integer(pb[pb$panel == p, c("exact_le005","within_01","within_02","beyond_02")])
+fidelity <- tibble::tibble(
+  Component = c("Tables 1, 2, 4, 5 (176 cells)",
+                "Table 3 — 1990–92 (25 cells)",
+                "Table 3 — 1992–96 (25 cells)",
+                "Table 3 — 2000–02 (15 cells)"),
+  `Exact / Tight` = c(154L, prow("1990-92")[1], prow("1992-96")[1], prow("2000-02")[1]),
+  `Within .01 / Close` = c(17L, prow("1990-92")[2], prow("1992-96")[2], prow("2000-02")[2]),
+  `Within .02` = c(NA_integer_, prow("1990-92")[3], prow("1992-96")[3], prow("2000-02")[3]),
+  `Beyond / Diverge` = c(5L, prow("1990-92")[4], prow("1992-96")[4], prow("2000-02")[4])
+)
+fidelity |>
+  gt() |>
+  sub_missing(columns = everything(), missing_text = "—") |>
+  tab_header(title = "Cross-sectional reproduction is faithful; panel fidelity is more mixed",
+             subtitle = "Every row sums to its cell total") |>
+  cols_align("left", columns = Component)
+```
+
+Across the four cross-sectional tables, 154 of 176 cells match tightly, 17 are close, and five
+diverge (@tbl-fidelity). Tables 2 and 4 reproduce essentially exactly, with maximum absolute
+differences of only .015 and .018. Four of the five diverges are Table 1 *Lowest-knowledge* cells,
+the smallest and noisiest stratum, which comes out at about 7% of the sample here against the paper's
+9%; the fifth is one Table 5 coefficient in the small *Lower* voter group. The panels reproduce less
+evenly. Policy Views and Ideology ID come within &plusmn;.01 in every cell of all three panels, the
+one documented exception being the 2000&ndash;02 policy row (§5.3). The value batteries,
+egalitarianism and moral traditionalism, reproduce less cleanly in the 1992&ndash;96 and
+2000&ndash;02 panels, where several cells fall beyond .02. The banding in @tbl-fidelity is exclusive,
+and every row sums to its stated cell count.
+
+**Anchor cells versus validation cells.** Because unstated coding choices were adjudicated against
+the anchors the tables supply (§2.2), cells used to *fix* a coding decision cannot also *validate*
+it. I therefore partition the 176 cross-sectional cells into two sets. The anchor cells are the
+Table 1 full-sample and ideology-row cells, which fixed the pre/post rating, the weighting, and the
+polar-half boundary, together with the Table 2 policy-&alpha; cells, which fixed the DK&rarr;midpoint
+rule. The remaining cells form an independent-validation set. The anchor set comprises
+`r V_F$anchor_partition$n[V_F$anchor_partition$role=="anchor"]` cells, with a tight-match rate of
+`r d1(V_F$anchor_partition$tight_pct[V_F$anchor_partition$role=="anchor"])`%. The
+`r V_F$anchor_partition$n[V_F$anchor_partition$role=="validation"]` validation cells, which include
+all of Table 4 and most of Tables 2 and 5 and were matched *without* being used to set any coding
+choice, still match tightly at
+`r d1(V_F$anchor_partition$tight_pct[V_F$anchor_partition$role=="validation"])`%, and all five
+diverges fall in this set. Even under the most generous anchoring, treating *all* 30 Table 1 cells
+plus the policy-&alpha; row as anchors
+(`r V_F$anchor_partition_generous$n[V_F$anchor_partition_generous$role=="anchor"]` cells), the
+validation tight-match rate is
+`r d1(V_F$anchor_partition_generous$tight_pct[V_F$anchor_partition_generous$role=="validation"])`%.
+The agreement is therefore genuinely informative rather than mechanical: the cells that did no
+adjudication work reproduce as faithfully as those that did.
+
+### Cross-sectional tables
+
+For breadth (Table 1), the reproduced full-sample polar-half shares match the published values
+closely: egalitarianism `r pp(t1v("egal","Full"))`% (published 32), moral traditionalism
+`r pp(t1v("mt","Full"))`% (35), policy views `r pp(t1v("policy","Full"))`% (18), ideology
+`r pp(t1v("ideo","Full"))`% (27), and partisanship `r pp(t1v("party","Full"))`% (61). The ideology
+row reproduces *exactly* by knowledge group, and the broad info-gain ordering is preserved, with
+ideology remaining steepest (H&divide;L `r d2(t1v("ideo","H_div_L"))`). Two pairs do swap rank,
+however. Egalitarianism comes out marginally flatter here (`r d2(t1v("egal","H_div_L"))`) than
+partisanship (`r d2(t1v("party","H_div_L"))`), against the original's 1.65 versus 1.63, and the
+middle pair swaps too, with policy at `r d2(t1v("policy","H_div_L"))` against moral traditionalism at
+`r d2(t1v("mt","H_div_L"))`, versus the original's 2.64 and 2.65. These are hairline reorderings
+within a reproduced gradient, not substantive divergences (@tbl-repro-headline).
+
+```{r}
+#| label: tbl-repro-headline
+#| tbl-cap: "Reproduction versus original for the headline breadth statistic (Table 1) and vote potency (Table 5, full-sample pseudo-R²). Original values transcribed from the published tables."
+orig_t1_full  <- c(egal=32, mt=35, policy=18, ideo=27, party=61)
+orig_t1_hl    <- c(egal=1.65, mt=2.65, policy=2.64, ideo=4.00, party=1.63)
+orig_t5_r2    <- c(Egalitarianism=.15, `Moral Tradition`=.13, `Policy Views`=.21,
+                   `Ideology ID`=.23, Partisanship=.49)
+cons <- c("egal","mt","policy","ideo","party")
+labs <- c("Egalitarianism","Moral Traditionalism","Policy Views","Ideology ID","Partisanship")
+t5map <- c("Egalitarianism","MoralTrad","PolicyViews","IdeoID","Partisanship")
+
+headline <- tibble::tibble(
+  Construct = labs,
+  `Polar-half %, orig` = orig_t1_full[cons],
+  `Polar-half %, repro` = round(sapply(cons, function(c) t1v(c, "Full"))),
+  `Info-gain H÷L, orig` = orig_t1_hl[cons],
+  `Info-gain H÷L, repro` = round(sapply(cons, function(c) t1v(c, "H_div_L")), 2),
+  `Vote R², orig` = orig_t5_r2,
+  `Vote R², repro` = round(sapply(t5map, function(p) t5v(p, "pseudoR2", "Full")), 2)
+)
+headline |>
+  gt() |>
+  tab_header(title = "Original vs reproduced: breadth and vote potency",
+             subtitle = "Full-sample values; per-cell grids in the appendix") |>
+  cols_align("left", columns = Construct) |>
+  tab_spanner("Breadth (Table 1)", columns = 2:5) |>
+  tab_spanner("Vote potency (Table 5)", columns = 6:7)
+```
+
+Reliability (Table 2) reproduces the steep coherence gradient: egalitarianism &alpha; rises from
+`r d2(t2v("egal","alpha","Lowest"))` in the lowest group to `r d2(t2v("egal","alpha","Highest"))`
+in the highest, and policy from `r d2(t2v("policy","alpha","Lowest"))` to
+`r d2(t2v("policy","alpha","Highest"))`, matching the published .38&rarr;.80. The vote models
+(Table 5) reproduce partisanship's dominance, with a full-sample pseudo-R² of
+`r d2(t5v("Partisanship","pseudoR2","Full"))` against ideology's
+`r d2(t5v("IdeoID","pseudoR2","Full"))`, as well as the sharp within-construct gradient, ideology
+rising from `r d2(t5v("IdeoID","pseudoR2","Lower"))` to `r d2(t5v("IdeoID","pseudoR2","Highest"))`
+across voter knowledge groups. Figure 1's qualitative story reproduces as well: the ideology
+distribution is dominated by a Moderate/HTMA bar of
+`r d1(R_fig1$ideology$pct[R_fig1$ideology$ideo_cat==4])`% (paper &asymp;49%), while partisans populate
+the poles. Footnote 5's abortion probit reproduces the "roughly twice / about five times" contrast,
+with a coefficient ratio of `r d1(R_fn5$coef_ratio[1])`&times; and a pseudo-R² ratio of
+`r d1(R_fn5$r2_ratio[1])`&times;.
+
+The reproducible in-text statistics also come out close. Mean knowledge is
+`r d2(ix("knowledge_HTMA_ideology"))` for HTMA identifiers against
+`r d2(ix("knowledge_libcon_identifiers"))` for liberals and conservatives (paper .36 / .63);
+`r pp(ix("policy_pct_answered_all_five")*100)`% answer all five policy items (66%); and the
+individual-level ideology&times;vote correlation is `r d2(ix("r_ideology_vote"))` (paper .49). That
+last figure sits against the .90 that Jost [-@jost2006] reported from *aggregated* data, and it is
+precisely the disaggregation gap that motivates the paper.
+
+<details>
+<summary>Full cell-level reproduction grids (Tables 1, 2, 4, 5)</summary>
+
+```{r}
+#| label: tbl-repro-full
+#| tbl-cap: "Reproduced Table 1 (breadth, %) by knowledge group."
+R_t1 |>
+  transmute(Construct = labs[match(construct, cons)], N,
+            Full = round(Full,1), Lowest = round(Lowest,1), Low = round(Low,1),
+            Middle = round(Middle,1), High = round(High,1), Highest = round(Highest,1),
+            `H-L` = round(H_minus_L,1), `H÷L` = round(H_div_L,2)) |>
+  gt() |> tab_header(title = "Table 1 (reproduced): percent in polar half")
+```
+
+```{r}
+#| label: tbl-repro-t4
+#| tbl-cap: "Reproduced Table 4 (Pearson correlations among constructs) by knowledge group."
+R_t4 |>
+  mutate(across(Full:Highest, ~round(.x,2))) |>
+  select(-N) |>
+  gt() |> tab_header(title = "Table 4 (reproduced): construct correlations")
+```
+
+```{r}
+#| label: tbl-repro-t5
+#| tbl-cap: "Reproduced Table 5 (presidential-vote probit) by voter knowledge group."
+R_t5 |>
+  mutate(across(Full:Highest, ~round(.x,2))) |>
+  gt() |> tab_header(title = "Table 5 (reproduced): vote probit coefficient / SE / pseudo-R²")
+```
+
+</details>
+
+### Three documentation-level anomalies
+
+Three numbers resist reproduction. I read them as minor errata or documentation gaps in an
+otherwise fully reproducible paper.
+
+**(i) A probable N transposition in Table 1.** The reproduced construct sample sizes are ideology
+$N = `r format(t1v("ideo","N"), big.mark=",")`$ and partisanship
+$N = `r format(t1v("party","N"), big.mark=",")`$, with party the larger of the two, as it should be,
+since party ID has near-zero item nonresponse while the ideology item loses non-placers. The paper
+prints the reverse, with ideology at 25,332 above partisanship at 24,307. The crosswise match, my
+party against the paper's 25,332 and my ideology against its 24,307, is far tighter than the printed
+assignment, so the two rows' $N$s were most likely transposed in the original. I flag this as an
+erratum candidate rather than silently "correcting" it.
+
+**(ii) The 1990&ndash;92 egalitarianism Middle cell.** Every other egalitarianism cell in that panel
+reproduces exactly (.24 / .14 / &mdash; / .32 / .38), as do all the moral-traditionalism, policy, and
+ideology cells on the identical subsample and grouping. Yet the Middle group's squared stability comes
+out at .14 against the published .26, and no tested variant reaches .26, whether alternative DK
+handling, complete-case indices, or leave-one-out over the six items. I cannot reproduce this single
+cell, and flag it as a likely erratum.
+
+**(iii) The 2000&ndash;02 policy stability row.** The 2002 study carries none of the five classic
+7-point policy scales, so this row cannot be reconstructed from any documented item set. The closest
+principled reconstruction, nine federal-spending items common to both waves, matches the published
+$N$ almost exactly (1,017 versus 1,016) but yields higher stability (.39 against the published .27).
+I report this row as an approximation rather than a validated reproduction, since the item set Kalmoe
+used is undocumented in the paper and its supplement.
+
+## Robustness
+
+Eight checks probe exactly the sensitivities the nomination raises, namely operationalisation, time
+period, issue selection, and measurement of the moderator, and each reuses the reproduction's coding
+so that cells stay comparable. Where the author's online supplement provides a target (Tables A1,
+B1&ndash;B5, C1&ndash;C5, D4), I use it as an external validation anchor. @tbl-robustness summarises
+the verdicts.
+
+```{r}
+#| label: tbl-robustness
+#| tbl-cap: "Robustness suite: eight checks, each validated against the author's supplement where available."
+rob <- tibble::tibble(
+  Check = c("RC1 Polar-half definition", "RC2 Nonattitude coding",
+            "RC3 Weighting", "RC4 Stratifier alternatives",
+            "RC5 Reliability (ordinal α, ω)", "RC6 Vote models (multivariate / link / AME)",
+            "RC7 Time periods", "RC8 Issue selection"),
+  Probes = c("exclusive / ±1 SD / outer-third boundary",
+             "HTMA & DK → drop vs → midpoint",
+             "weight Tables 2 & 4",
+             "education / quiz / median split",
+             "polychoric α and McDonald's ω",
+             "values beyond party+ideo; logit/LPM; marginal effects",
+             "1984–96 vs 2000–16; 2008–16",
+             "leave-one-out + 6-item index"),
+  Verdict = c("Survives", "Qualifies framing", "Survives", "Survives",
+              "Survives", "Survives", "Survives", "Survives")
+)
+rob |>
+  gt() |>
+  tab_header(title = "Every substantive conclusion survives",
+             subtitle = "RC2 reframes the breadth statistic without overturning it") |>
+  cols_align("left", columns = everything()) |>
+  data_color(columns = Verdict,
+             fn = function(x) ifelse(x == "Survives", "#e7f0e9", "#fdf3e2"))
+```
+
+The two checks worth dwelling on are RC2 and RC6c.
+
+**RC2: the breadth gradient largely expresses nonattitude coding.** The paper scores ideology
+HTMA and policy DK at the scale midpoint. When these nonattitudes are instead *dropped*, the Table 1
+breadth gradient flattens. The highest-minus-lowest gap is **eliminated for policy** (from +17 to
+about +1.6 points) and **halved for ideology** (from +33 to about +17), because the lowest-knowledge
+group jumps once it is restricted to respondents who actually hold an attitude. HTMA is
+`r d1(RC2$htma_share_pct)`% of the ideology sample, and the famous Figure 1 middle bar is about half
+nonattitude, so once HTMA is excluded the true-moderate bar is
+`r d1(RC2$moderate_bar$dropped_true_moderate_pct)`% rather than 50%. This does not overturn the paper;
+instead it operationalises its "innocence" mechanism, in which low-knowledge citizens lack attitudes
+to place, a selection effect rather than a coding trick. However, it does mean that the polar-half
+statistic should not be read as evidence independent of nonresponse. The *coherence* gradient (Table 4
+correlations) is more robust to the coding, since dropping nonattitudes leaves the ideology&times;party
+gradient similar, at `r d2(RC2$cor_ideo_drop$Lowest[RC2$cor_ideo_drop$pair=="ideo x party"])` in the
+lowest group and `r d2(RC2$cor_ideo_drop$Highest[RC2$cor_ideo_drop$pair=="ideo x party"])` in the
+highest. This comparison is not strictly like-for-like, though. Because HTMA is concentrated in the
+lowest-knowledge group, dropping it removes a large share of that group but little of the top, so the
+surviving low-knowledge respondents are the more opinionated subset. The gradient among
+attitude-holders is genuine, but it is computed on a differentially selected sample, driven by the
+same selection mechanism that produces the breadth result, and so it does not prove that coherence is
+untouched by how nonattitudes are handled.
+
+**RC6c: potency stratification on the effect-size scale.** The vote-choice stratification looks
+enormous as a variance-explained ratio, with a pseudo-R² highest&divide;lowest of 5&ndash;10&times;,
+but on the interpretable probability scale it is moderate. Average marginal effects (AMEs) give a
+highest&divide;lowest ratio of about 1.4&ndash;1.7&times; across constructs, just below the
+probit-coefficient ratio of about 1.9&ndash;2.7&times;, and far below the pseudo-R² ratio of
+5&ndash;10&times;. The gap is not a simple squaring. McFadden's pseudo-R² is a log-likelihood-ratio
+statistic ($1 - \mathrm{LL}/\mathrm{LL}_0$) rather than a variance-explained proportion, and in a
+probit model the translation from the coefficient to fit depends on the base rate, the within-group
+predictor variance, and the curvature of the link. The pseudo-R² ratio therefore inflates group
+differences relative to the interpretable probability scale by an amount that varies with those
+quantities, rather than tracking any fixed power of the coefficient ratio. One result stands out:
+**partisanship's marginal effect on vote probability is flat, indeed slightly declining, across
+knowledge** (AME ratio `r d2(RC6$ame$AME_H_div_L[RC6$ame$predictor=="party"])`), even as its
+coefficient rises. On the scale that matters for behaviour, partisanship is not merely the strongest
+predictor but the most *uniformly* strong, which reinforces the paper's knowledge-robustness claim.
+
+The remaining checks confirm cleanly. The breadth gradient is invariant to the polar-half boundary
+(RC1); weighting moves no cell by more than about .02 (RC3); education and a campaign-knowledge quiz
+reproduce the gradient (validating against supplement Tables B1&ndash;B5), while a binary median split
+hides roughly half of it (RC4); ordinal reliability leaves the gradient if anything steeper (RC5,
+validated against Table D4); adding the two values to a party+ideology vote model raises pseudo-R² by
+only about 2&ndash;4 points (RC6a); no single policy item is load-bearing (RC8); and coherence,
+together with its stratification, is if anything *stronger* in the polarised 2000&ndash;2016
+sub-period than in 1984&ndash;1996 (RC7, validated against Tables C1&ndash;C5). That last result
+foreshadows the replication.
+
+## Replication in ANES 2020 and 2024
+
+The original used data through 2016. Whether its conclusions hold in the hyper-polarised 2020s is a
+genuine test of generality, and one the author could not run.
+
+### Forced deviations
+
+Four deviations are unavoidable, and each is handled conservatively. **(1) Knowledge measure.** The
+interviewer rating was discontinued, and is empty for every 2020/2024 case, so knowledge is a
+proportion-correct **civics quiz**, precisely the alternative the author himself uses in supplement
+Tables B1&ndash;B5. The four pre-election items take five values that provide the five knowledge groups
+directly. Their achieved population shares (2020: `r paste(X_kn$shares_2020$pre_only, collapse="/")`;
+2024: `r paste(X_kn$shares_2024$pre_only, collapse="/")`, lowest to highest) approximate Kalmoe's fixed
+interviewer-rating shares of 9/20/34/25/13 rather than being re-quantiled, so the lowest group is
+comparably populated across eras (about 10% in 2020 and `r d1(X_kn$shares_2024$pre_only[1])`% in 2024),
+and the merged voter groups behind the vote tables carry the cell $n$s shown there. Because the
+author's own supplement shows quiz stratification is "slightly less distinct" than the interviewer
+rating, every stratification comparison below is anchored to his *quiz-stratified* original-era tables
+(quiz-versus-quiz), not to the steeper interviewer-rated tables. **(2) Web mode.** 2020 is 94% web and
+2024 about 81% web, so the FTF/phone restriction cannot be applied. I therefore compare the key
+ideology metrics across mode within 2020 (§ "The shrinking middle", @tbl-rep-mode): the HTMA rate is
+mode-independent, but the non-web cells are too small to settle whether the moderate-to-polar shift is
+mode-driven. **(3) Reduced value batteries.** The cumulative file carries only 4 of 6 egalitarianism
+items and 2 of 4 moral-traditionalism items for these years. Since fewer items mechanically inflate
+polar-half shares and depress &alpha;, the value comparisons use a **matched-item 1984&ndash;2016
+baseline** and lead with item-count-invariant covariance. **(4) Vote.** The two-party recode
+`VCF0704a` is empty for 2024, so vote is derived from `VCF0704`.
+
+### Cross-sectional results
+
+Every metric of mass ideology rose. Breadth, coherence, correlation, and vote-predictiveness all
+increased relative to both the 1984&ndash;2016 and the 2008&ndash;2016 anchors (@tbl-rep-crosssec).
+
+```{r}
+#| label: tbl-rep-crosssec
+#| tbl-cap: "Full-sample analogues of Tables 1, 4, and 5 across eras. Egalitarianism/moral-traditionalism breadth is shown against its matched-item 1984–2016 baseline in brackets. Ideology & partisanship are on unchanged scales."
+af <- X_cmp$anchor_full
+matched <- X_cmp$matched_baseline
+# breadth with matched brackets for egal/mt
+br8416 <- af$breadth_8416
+br_lab <- ifelse(af$construct %in% c("Egalitarianism","Moral Tradition"),
+                 paste0(br8416, " [", matched$breadth_matched_8416[match(af$construct, matched$construct)], "]"),
+                 as.character(br8416))
+rep_cs <- tibble::tibble(
+  Construct = af$construct,
+  `Breadth 1984–2016` = br_lab,
+  `Breadth 2008–16` = round(af$breadth_0816),
+  `Breadth 2020` = round(X_cmp$breadth_2020),
+  `Breadth 2024` = round(X_cmp$breadth_2024),
+  `Avg corr 1984–2016` = af$avgcorr_8416,
+  `Avg corr 2008–16` = round(af$avgcorr_0816, 2),
+  `Avg corr 2020` = round(X_cmp$avgcorr_2020, 2),
+  `Avg corr 2024` = round(X_cmp$avgcorr_2024, 2),
+  `Vote R² 1984–2016` = af$voter2_8416,
+  `Vote R² 2008–16` = round(af$voter2_0816, 2),
+  `Vote R² 2020` = round(X_cmp$voteR2_2020, 2),
+  `Vote R² 2024` = round(X_cmp$voteR2_2024, 2)
+)
+rep_cs |>
+  gt() |>
+  tab_header(title = "Mass ideology rose on every metric, 2016 → 2020/2024",
+             subtitle = "Breadth = % polar half; correlation = mean inter-construct r; vote = pseudo-R²") |>
+  tab_spanner("Breadth (%)", columns = 2:5) |>
+  tab_spanner("Avg. correlation", columns = 6:9) |>
+  tab_spanner("Vote pseudo-R²", columns = 10:13) |>
+  cols_align("left", columns = Construct) |>
+  fmt_markdown(columns = `Breadth 1984–2016`) |>
+  tab_options(table.font.size = pct(85), container.overflow.x = "auto")
+```
+
+Ideology's polar share reached `r pp(X_cmp$breadth_2020["Ideology ID"])`% (2020) and
+`r pp(X_cmp$breadth_2024["Ideology ID"])`% (2024), above both the 1984&ndash;2016 value of 27 and the
+2008&ndash;2016 value of 32, so the ideological poles are more populated than at any point the author
+observed. Every construct became about +0.20 more inter-correlated: ideology's average inter-construct
+correlation rose from `r d2(af$avgcorr_8416[4])` to `r d2(X_cmp$avgcorr_2020[4])`, and the *pairwise*
+ideology&times;party correlation rose from .44 (original Table 4) to
+`r d2(X_t4$table4_2020$Full[X_t4$table4_2020$pair=="IdeoID x Party"])`. Vote-predictiveness rose for
+every construct, with partisanship reaching pseudo-R²
+`r d2(X_cmp$voteR2_2020["Partisanship"])` (2020) and `r d2(X_cmp$voteR2_2024["Partisanship"])` (2024).
+The two value batteries carry item-count artefacts and must be read against their matched baselines,
+which the bracketed figures supply. For moral traditionalism the "rise" is almost entirely item-count.
+Against its matched 2-item baseline (breadth `r pp(V_F$item_count_decomp$matched_8416[2])`), its
+2020/2024 breadth (`r pp(X_cmp$breadth_2020["Moral Tradition"])`/`r pp(X_cmp$breadth_2024["Moral Tradition"])`)
+is essentially flat: of the apparent +`r pp(V_F$item_count_decomp$rise_unmatched_2024[2])`-point rise
+in 2024, +`r pp(V_F$item_count_decomp$itemcount_pp_2024[2])` is item-count inflation and only
++`r pp(V_F$item_count_decomp$rise_matched_2024[2])` is genuine. Egalitarianism is affected in parallel.
+Its matched 4-item baseline is `r pp(V_F$item_count_decomp$matched_8416[1])` rather than the unmatched
+`r pp(V_F$item_count_decomp$unmatched_8416[1])`, so of its +`r pp(V_F$item_count_decomp$rise_unmatched_2024[1])`-point
+2024 rise, +`r pp(V_F$item_count_decomp$itemcount_pp_2024[1])` is item-count and only
++`r pp(V_F$item_count_decomp$rise_matched_2024[1])` is real. Both constructs' covariance and
+correlation rises, which are item-count invariant, survive.
+
+### Where the stratification went
+
+Holding the knowledge measure constant (quiz-versus-quiz) splits the stratification verdict by metric.
+**Breadth stratification did not meaningfully collapse; it was always modest on a quiz.** The ideology
+breadth ratio was 2.29 on the 1986&ndash;92 quiz, against 4.00 on the interviewer rating, and is
+`r d2(X_cmp$breadth_HdivL_2020["Ideology ID"])` in 2020; partisanship was flat then (1.08) and flat now
+(`r d2(X_cmp$breadth_HdivL_2020["Partisanship"])`).
+
+**For ideology, policy, and moral traditionalism the quiz-matched vote-potency gradient compressed
+sharply; egalitarianism is the exception, where it roughly doubled from a low base** (1.3 on the
+1988&ndash;92 quiz to `r d2(X_cmp$voteR2_HdivL_2020["Egalitarianism"])`/`r d2(X_cmp$voteR2_HdivL_2024["Egalitarianism"])`
+in 2020/2024). For ideology, the quiz-stratified Highest&divide;Lowest vote-R² ratio was
+`r d1(X_cmp$anchor_infogain$vote_R2_HdivL_quiz8892[4])` in 1988&ndash;92, essentially identical to the
+interviewer-rated 10.75, with the lowest-knowledge voter group at pseudo-R² .04. In 2020 the same
+quiz-based ideology ratio is `r d2(X_cmp$voteR2_HdivL_2020["Ideology ID"])`
+(2024: `r d2(X_cmp$voteR2_HdivL_2024["Ideology ID"])`), and the lowest-knowledge voter group's ideology
+pseudo-R² has risen to `r d2(x5(X_t5$table5_2020, "Ideology ID", "pseudoR2", "Lower"))` (2020) and
+`r d2(x5(X_t5$table5_2024, "Ideology ID", "pseudoR2", "Lower"))` (2024). Low-knowledge voters, whose
+ballots barely tracked their ideology in 1988&ndash;92 even on the quiz, now cast substantially
+ideologically structured votes. A residual gradient of roughly 2&ndash;2.5&times; remains, so the
+paper's strong "meaningful for a knowledgeable minority only" framing no longer holds, though the
+pattern is compressed rather than erased.
+
+Because pseudo-R² ratios exaggerate stratification relative to the interpretable probability scale
+(RC6c), the same comparison should be checked on average marginal effects (@tbl-rep-ame-ratio). On
+the AME scale the ideology gradient was already modest, a Highest&divide;Lower ratio of
+`r d2(vb("1988-92 (quiz)","Ideology","AME_H_div_L"))` on the 1988&ndash;92 quiz rather than 10&times;,
+and by 2020/2024 it falls *below one* (`r d2(vb("2020 (quiz)","Ideology","AME_H_div_L"))` and
+`r d2(vb("2024 (quiz)","Ideology","AME_H_div_L"))`): the low-knowledge group's marginal effect of
+ideology on vote probability is now, if anything, slightly *larger* than the high-knowledge group's.
+The two metrics thus tell the same directional story, that low-knowledge voters caught up, but they
+disagree on magnitude, and the recommended metric shows the vote-potency gradient not merely
+compressed but essentially gone. I report the pseudo-R² ratio as the headline for continuity with the
+original's own reporting, but flag that its "10.5&times;" starting point is a variance-scale artefact
+more than a behavioural fact.
+
+```{r}
+#| label: tbl-rep-vote-ratio
+#| tbl-cap: "Vote-potency stratification (pseudo-R² Highest÷Lowest), measure-matched. The fair benchmark for the 2020/2024 quiz index is the author's own quiz-stratified 1988–92 table (B5), not the steeper interviewer-rated column. 2020/2024 use merged voter knowledge groups."
+ai <- X_cmp$anchor_infogain
+vote_ratio <- tibble::tibble(
+  Construct = ai$construct,
+  `Interviewer 1984–2016` = round(ai$vote_R2_HdivL_8416, 1),
+  `Quiz 1988–92 (B5)` = round(ai$vote_R2_HdivL_quiz8892, 1),
+  `Quiz 2020` = round(X_cmp$voteR2_HdivL_2020, 2),
+  `Quiz 2024` = round(X_cmp$voteR2_HdivL_2024, 2)
+)
+vote_ratio |>
+  gt() |>
+  tab_header(title = "Vote-potency gradient: sharply reduced on the quiz-matched test",
+             subtitle = "Ideology 10.5× (1988–92 quiz) → ~2.5× (2020) / ~2.0× (2024)") |>
+  cols_align("left", columns = Construct)
+```
+
+```{r}
+#| label: tbl-rep-ame-ratio
+#| tbl-cap: "The same Highest÷Lower vote-potency gradient on two metrics: the pseudo-R² ratio (variance scale) and the average-marginal-effect ratio (probability scale). Ideology and party, measure-matched across eras, merged voter knowledge groups. The AME ratio was already ≤ 2× in the original eras and falls below 1 by 2020/2024."
+ame_ratio <- tibble::tibble(
+  Era = c("1988–92 (quiz)","2020 (quiz)","2024 (quiz)","1984–2016 (interviewer)"),
+  `Ideology AME H÷L` = c(vb("1988-92 (quiz)","Ideology","AME_H_div_L"),
+                         vb("2020 (quiz)","Ideology","AME_H_div_L"),
+                         vb("2024 (quiz)","Ideology","AME_H_div_L"),
+                         vb("1984-2016 (interviewer)","Ideology","AME_H_div_L")),
+  `Ideology pseudo-R² H÷L` = c(vb("1988-92 (quiz)","Ideology","R2_H_div_L"),
+                               vb("2020 (quiz)","Ideology","R2_H_div_L"),
+                               vb("2024 (quiz)","Ideology","R2_H_div_L"),
+                               vb("1984-2016 (interviewer)","Ideology","R2_H_div_L")),
+  `Party AME H÷L` = c(vb("1988-92 (quiz)","Party","AME_H_div_L"),
+                      vb("2020 (quiz)","Party","AME_H_div_L"),
+                      vb("2024 (quiz)","Party","AME_H_div_L"),
+                      vb("1984-2016 (interviewer)","Party","AME_H_div_L")),
+  `Party pseudo-R² H÷L` = c(vb("1988-92 (quiz)","Party","R2_H_div_L"),
+                            vb("2020 (quiz)","Party","R2_H_div_L"),
+                            vb("2024 (quiz)","Party","R2_H_div_L"),
+                            vb("1984-2016 (interviewer)","Party","R2_H_div_L"))
+)
+ame_ratio |>
+  gt() |>
+  tab_header(title = "On the interpretable scale, ideology's stratification was never 10×",
+             subtitle = "AME Highest÷Lower vs pseudo-R² Highest÷Lower") |>
+  cols_align("left", columns = Era)
+```
+
+### Sorting or constraint?
+
+Every metric above is *bivariate*: breadth, inter-construct correlations, and the ideology vote-R²
+all describe ideology on its own. However, the framework this paper replicates warns that measured
+"ideology" in mass publics is often party identity in ideological clothing [@kinderkalmoe2017;
+@mason2018]. Bivariate ideology potency is exactly what partisan sorting inflates, because if citizens
+simply adopt ideological labels that track their existing party, ideology's vote-R² can rise with no
+gain in genuine belief-system constraint. The discriminating test is ideology's *incremental*
+contribution beyond party identification. For each era and knowledge group, I fit a weighted probit of
+Republican two-party vote on party alone and on party + ideology, using identical complete-case rows,
+and read off how much ideology adds (@tbl-rep-increment).
+
+```{r}
+#| label: tbl-rep-increment
+#| tbl-cap: "Ideology's incremental vote contribution net of party ID: the rise in McFadden pseudo-R² from adding ideology to a party-only probit, by era and (merged) voter knowledge group. Measure-matched (interviewer 1984–2016; campaign quiz 1988–92; civics quiz 2020/2024). The final column is the ideology×party correlation, full sample."
+incr_wide <- V_A |>
+  dplyr::filter(group != "Full") |>
+  dplyr::select(era, group, incr_ideo) |>
+  tidyr::pivot_wider(names_from = group, values_from = incr_ideo)
+full_incr <- V_A$incr_ideo[V_A$group == "Full"]
+full_cor  <- V_A$cor_ideo_party[V_A$group == "Full"]
+incr_tbl <- tibble::tibble(
+  Era = incr_wide$era,
+  Full = full_incr,
+  Lower = incr_wide$Lower, Middle = incr_wide$Middle, High = incr_wide$High, Highest = incr_wide$Highest,
+  `Ideology×party r` = round(full_cor, 2)
+)
+incr_tbl |>
+  gt() |>
+  fmt_number(columns = c(Full, Lower, Middle, High, Highest), decimals = 3) |>
+  tab_header(title = "Net of party, ideology's independent contribution did not rise",
+             subtitle = "Δ pseudo-R² from adding ideology to a party-only vote model") |>
+  cols_align("left", columns = Era) |>
+  tab_spanner("Increment by knowledge group", columns = c(Lower, Middle, High, Highest))
+```
+
+The answer, which is where the review's concern lies, is that it did not. Ideology's increment beyond
+party is small in every era, a few pseudo-R² points, and it did not rise overall or at the
+low-knowledge floor. The full-sample increment was
+`r d2(va("1984-2016 (interviewer)","Full","incr_ideo"))` on the interviewer rating and
+`r d2(va("1988-92 (quiz)","Full","incr_ideo"))` on the measure-matched 1988&ndash;92 quiz, against
+`r d2(va("2020 (quiz)","Full","incr_ideo"))` in 2020 and `r d2(va("2024 (quiz)","Full","incr_ideo"))`
+in 2024, so it is flat and if anything lower. The low-knowledge floor tells the same story: ideology
+added `r d2(va("1988-92 (quiz)","Lower","incr_ideo"))` there on the 1988&ndash;92 quiz and adds
+`r d2(va("2020 (quiz)","Lower","incr_ideo"))` (2020) and `r d2(va("2024 (quiz)","Lower","incr_ideo"))`
+(2024), again no rise. The increments are small and non-monotonic rather than trending. The Middle and
+Highest cells do tick up in 2020, to `r d2(va("2020 (quiz)","Middle","incr_ideo"))` and
+`r d2(va("2020 (quiz)","Highest","incr_ideo"))`, before 2024's ceiling effect compresses them, since
+party alone already reaches pseudo-R² `r d2(va("2024 (quiz)","Full","r2_party"))` there; but nowhere
+does adding ideology to party lift fit by more than a handful of points. The asymmetry is the cleaner
+summary. Reversing the comparison, adding *party* to an ideology-only model lifts fit by
+`r d2(va("2020 (quiz)","Full","incr_party"))` (2020, full sample) against ideology's
+`r d2(va("2020 (quiz)","Full","incr_ideo"))`, so party carries the vote while ideology rides along.
+Meanwhile the low-knowledge group's *bivariate* ideology vote-R² climbed from about .04 to
+`r d2(x5(X_t5$table5_2020, "Ideology ID", "pseudoR2", "Lower"))`/`r d2(x5(X_t5$table5_2024, "Ideology ID", "pseudoR2", "Lower"))`,
+and its ideology&times;party correlation climbed from
+`r d2(va("1988-92 (quiz)","Lower","cor_ideo_party"))` to
+`r d2(va("2020 (quiz)","Lower","cor_ideo_party"))`/`r d2(va("2024 (quiz)","Lower","cor_ideo_party"))`.
+Almost the entire rise in low-knowledge ideological vote potency is ideology's growing *alignment with
+party*, not a growing independent contribution.
+
+The honest reading is descriptive rather than adjudicating: net of party, ideology's independent
+electoral contribution changed little, so the striking bivariate rise reflects ideology and party
+moving together. This does not prove "sorting, not constraint", since two genuinely co-evolving
+constructs would leave the same signature, and I cannot separate citizens adopting party-aligned
+ideological labels from parties becoming more ideologically defined. Nor does it fully rescue the
+innocence thesis. On the interpretable probability scale a modest independent ideology effect persists
+in every cell: the joint-model ideology AME runs from about
+`r d2(va("2020 (quiz)","Lower","ame_ideo_joint"))` at the low-knowledge floor to
+`r d2(va("2020 (quiz)","Highest","ame_ideo_joint"))` at the top in 2020, modest and present
+everywhere, with a mild residual gradient. The coherence and stability gradients below are also not
+bivariate-vote artefacts. It does, however, qualify the strong "time-bound" claim, because the part of
+the apparent shift that is genuine *independent* ideological constraint is small and did not grow. What
+rose most is how tightly ideology and party now travel together.
+
+### Stability
+
+On the `r format(V_C$n_panel, big.mark=",")`-case 2016&ndash;2020&ndash;2024 panel, squared
+2020&rarr;2024 continuity correlations rose for every construct relative to the original 1992&ndash;96
+panel, which spans the same four-year gap (@tbl-rep-stability). Ideological identification rose by
+roughly three-quarters, from .37 to
+`r d2(X_stab$stability_2020_2024$Full[X_stab$stability_2020_2024$construct=="Ideology ID"])`
+(&times;`r d2(X_stab$stability_2020_2024$Full[X_stab$stability_2020_2024$construct=="Ideology ID"]/0.37)`).
+Even the low-knowledge group's ideology stability
+(`r d2(X_stab$stability_2020_2024$Lower[X_stab$stability_2020_2024$construct=="Ideology ID"])`) exceeds
+the original *full-sample* value. Because the reduced value batteries add noise that attenuates
+test&ndash;retest correlations, the egalitarianism and moral-traditionalism rises are if anything
+conservative; that attenuation argument, however, is not the whole story on the direction of bias.
+These estimates come from respondents in a *three-wave* panel (2016&ndash;2020&ndash;2024), and by the
+third interview panel conditioning, in which respondents crystallise or anchor to remembered prior
+answers, can *inflate* test&ndash;retest correlations beyond a fresh two-wave design. Measurement noise
+and conditioning push in opposite directions, and which dominates the net bias is not determinable
+here, so the stability rise should be read as directional rather than as a precise magnitude.
+
+**Panel attrition.** Multi-wave panels retain the politically engaged selectively, so the panel could
+over-represent exactly the respondents whose attitudes are most stable, and could do so differentially
+by knowledge. Retention of the 2020 cross-section into the 2024 panel wave is indeed mildly
+knowledge-graded: `r d1(V_C$composition_5grp$retention_pct[V_C$composition_5grp$group=="Lowest"])`% of
+the lowest quiz group was retained against
+`r d1(V_C$composition_5grp$retention_pct[V_C$composition_5grp$group=="Highest"])`% of the highest
+(overall `r d1(V_C$overall_retention_pct)`%), so the lowest group is slightly under-represented in the
+panel, at `r d1(V_C$composition_5grp$panel_pct[V_C$composition_5grp$group=="Lowest"])`% of panel cases
+against `r d1(V_C$composition_5grp$crosssection_pct[V_C$composition_5grp$group=="Lowest"])`% of the
+cross-section. The bias this induces is small, however. Post-stratifying the panel back to the 2020
+cross-sectional quiz distribution barely moves the stability estimates, taking reweighted ideology
+stability to `r d2(V_C$stability_reweighted$poststrat_5grp[V_C$stability_reweighted$construct=="Ideology ID"])`
+against the unweighted `r d2(V_C$stability_reweighted$unweighted[V_C$stability_reweighted$construct=="Ideology ID"])`,
+and applying the ANES panel weight (`V240106b`) lowers it only to
+`r d2(V_C$stability_reweighted$panelwt_V240106b[V_C$stability_reweighted$construct=="Ideology ID"])`
+(@tbl-rep-stab-reweight). Even under the panel weight, low-knowledge ideology stability stays well
+above the original full-sample value, so differential attrition does not manufacture the result,
+though it likely inflates the level modestly.
+
+```{r}
+#| label: tbl-rep-stab-reweight
+#| tbl-cap: "Attrition sensitivity for the 2020→2024 stability estimates. Unweighted (primary, matching the original's unweighted Table 3); post-stratified to the 2020 cross-sectional quiz-knowledge distribution over the five quiz groups; and multiplied by the ANES V240106b panel weight."
+V_C$stability_reweighted |>
+  gt() |>
+  cols_label(construct = "Construct", unweighted = "Unweighted", poststrat_5grp = "Post-strat (5 groups)",
+             panelwt_V240106b = "× panel weight", poststrat_x_panelwt = "Both") |>
+  tab_header(title = "Reweighting for differential attrition barely moves stability",
+             subtitle = "Squared 2020→2024 continuity correlations, full sample") |>
+  cols_align("left", columns = construct)
+```
+
+```{r}
+#| label: tbl-rep-stability
+#| tbl-cap: "Squared continuity (test–retest) correlations, 2020→2024, versus the original 1992–96 panel, by 2020-wave quiz knowledge."
+st <- X_stab$stability_2020_2024
+st_orig <- X_stab$original_1992_96
+stab_tbl <- tibble::tibble(
+  Construct = st$construct,
+  `1992–96 (orig)` = st_orig$r2_1992_96[match(st$construct, st_orig$construct)],
+  `2020→2024 Full` = st$Full,
+  Lower = st$Lower, Middle = st$Middle, High = st$High, Highest = st$Highest
+)
+stab_tbl |>
+  gt() |>
+  tab_header(title = "Stability rose for every construct",
+             subtitle = "Ideological identification rose ×1.73 (.37 → .64)") |>
+  cols_align("left", columns = Construct) |>
+  tab_source_note(gt::md(sprintf(
+    "Merged voter knowledge groups; among the %s panel cases the 2020-quiz group shares are Lower %s%%, Middle %s%%, High %s%%, Highest %s%%.",
+    format(V_C$n_panel, big.mark=","),
+    d1(V_C$composition_4grp$panel_pct[1]), d1(V_C$composition_4grp$panel_pct[2]),
+    d1(V_C$composition_4grp$panel_pct[3]), d1(V_C$composition_4grp$panel_pct[4]))))
+```
+
+### The shrinking middle
+
+The ideological middle contracted. The Moderate/HTMA bar fell from about 49% in the original era
+(50.0% reproduced) to `r d1(X_fig1$y2020$ideo_moderate_or_htma)`% in 2020 and
+`r d1(X_fig1$y2024$ideo_moderate_or_htma)`% in 2024, as the liberal and conservative categories grew
+(@fig-ideo-eras). "Haven't thought much about it" persists on the web at
+`r d1(X_fig1$y2020$pct_htma)`% (2020) / `r d1(X_fig1$y2024$pct_htma)`% (2024), and opinionation still
+tracks knowledge: mean quiz knowledge is
+`r d2(X_opin$y2020$summary$value[X_opin$y2020$summary$stat=="knowledge_HTMA"])` for HTMA identifiers
+versus `r d2(X_opin$y2020$summary$value[X_opin$y2020$summary$stat=="knowledge_libcon"])` for those who
+place themselves.
+
+Because RC2 showed the breadth statistic is partly a nonresponse statistic, the breadth rise itself
+must be decomposed into genuine polar movement and reduced nonattitude. All figures here are weighted
+on a common basis, so the accounting is internally consistent (the earlier unweighted web-HTMA figures
+differ slightly by design). Weighted polar-half breadth rose from
+`r d1(V_D$ideology["orig","base"])`% to `r d1(V_D$ideology["y2020","base"])`% (2020) /
+`r d1(V_D$ideology["y2024","base"])`% (2024); among *attitude-holders only* (dropping HTMA) it rose
+from `r d1(V_D$ideology["orig","holders"])`% to `r d1(V_D$ideology["y2020","holders"])`% /
+`r d1(V_D$ideology["y2024","holders"])`%, while the weighted HTMA share fell from
+`r d1(V_D$ideology["orig","htma"])`% to `r d1(V_D$ideology["y2020","htma"])`% /
+`r d1(V_D$ideology["y2024","htma"])`%. Decomposing the +`r d1(V_D$decomp_2020["total_rise"])`-point
+2020 rise, only +`r d1(V_D$decomp_2020["nonresponse_component"])` points come from reduced nonresponse
+and +`r d1(V_D$decomp_2020["polar_component"])` from genuine polar movement among attitude-holders
+(2024: +`r d1(V_D$decomp_2024["nonresponse_component"])` nonresponse, +`r d1(V_D$decomp_2024["polar_component"])`
+polar). The breadth rise is therefore mostly real polarisation rather than people simply abandoning
+"haven't thought much", though the nonresponse component is non-trivial and, per RC2, the *original*
+gradient was more nonresponse-driven than the level rise is.
+
+Whether the contraction is a web-mode effect is harder to settle, because 2020 is
+`r d1(V_E$mode_table$n_administered[V_E$mode_table$mode=="Web"]/sum(V_E$mode_table$n_administered)*100)`%
+web and the face-to-face-successor modes are thin (@tbl-rep-mode). The HTMA *component* is not
+mode-driven: HTMA runs `r d1(V_E$mode_table$htma_pct[V_E$mode_table$mode=="Web"])`% on the web,
+`r d1(V_E$mode_table$htma_pct[V_E$mode_table$mode=="Video"])`% on video, and
+`r d1(V_E$mode_table$htma_pct[V_E$mode_table$mode=="Phone"])`% on phone. The *Moderate*
+self-placement rate, about which HTMA flatness says nothing, is not obviously flat, however, running
+`r d1(V_E$mode_table$moderate_pct[V_E$mode_table$mode=="Web"])`% on the web against
+`r d1(V_E$mode_table$moderate_pct[V_E$mode_table$mode=="Phone"])`% on phone. With only
+`r V_E$mode_table$n_administered[V_E$mode_table$mode=="Video"]` video and
+`r V_E$mode_table$n_administered[V_E$mode_table$mode=="Phone"]` phone respondents, the non-web polar
+share is estimated far too imprecisely (web polar
+`r d1(V_E$mode_table$polar_overall[V_E$mode_table$mode=="Web"])`%, 95% CI
+`r d1(V_E$mode_table$polar_overall_lo[V_E$mode_table$mode=="Phone"])`&ndash;`r d1(V_E$mode_table$polar_overall_hi[V_E$mode_table$mode=="Phone"])`
+on phone) to rule a mode effect in or out. The honest statement is therefore a narrow one: the HTMA
+share is mode-independent, but whether the moderate-to-polar shift is mode-driven cannot be determined
+from the tiny non-web subsamples. Ideology's bivariate vote pseudo-R² is close across the web/non-web
+split (`r d2(V_E$ideo_voteR2_web$r2[V_E$ideo_voteR2_web$group=="Web"])` web against
+`r d2(V_E$ideo_voteR2_web$r2[V_E$ideo_voteR2_web$group=="Non-web"])` non-web), which is reassuring but
+rests on only `r V_E$ideo_voteR2_web$n[V_E$ideo_voteR2_web$group=="Non-web"]` non-web voters.
+
+```{r}
+#| label: tbl-rep-mode
+#| tbl-cap: "Ideology metrics by 2020 interview mode. Moderate and HTMA are shown separately (the composite is what shrank). Non-web cells are tiny — n's are given and the polar share carries a wide interval — so mode effects cannot be pinned down. Percentages among administered cases; correlation among self-placers."
+V_E$mode_table |>
+  dplyr::transmute(Mode = mode, `n (admin.)` = n_administered,
+                   `Polar %` = polar_overall, `Moderate %` = moderate_pct, `HTMA %` = htma_pct,
+                   `Mean |ideo|` = mean_abs_ideo, `Ideo×party r` = cor_ideo_party) |>
+  gt() |>
+  tab_header(title = "2020 ideology by mode: HTMA is flat, the rest is too noisy to call",
+             subtitle = "Web n ≈ 7,800; video ≈ 360; phone ≈ 140") |>
+  cols_align("left", columns = Mode)
+```
+
+```{r}
+#| label: fig-ideo-eras
+#| fig-cap: "The ideological middle shrank as the poles grew. Seven-category liberal–conservative self-placement across three eras; the Moderate/HTMA category fell from 50% to about 35%. 1984–2016 is the reproduced ANES distribution; 2020/2024 are the replication distributions."
+#| fig-height: 6
+eras <- bind_rows(
+  R_fig1$ideology     |> transmute(cat = ideo_cat, label, pct, era = "1984–2016"),
+  X_fig1$y2020$ideology |> transmute(cat = ideo_cat, label, pct, era = "2020"),
+  X_fig1$y2024$ideology |> transmute(cat = ideo_cat, label, pct, era = "2024")
+) |>
+  mutate(label = factor(label, levels = R_fig1$ideology$label),
+         era = factor(era, levels = c("1984–2016","2020","2024")),
+         is_mid = label == "Moderate/HTMA")
+
+ggplot(eras, aes(x = pct, y = forcats::fct_rev(label))) +
+  geom_col(aes(alpha = is_mid), fill = "#2f6b8f", width = 0.72) +
+  geom_text(aes(label = sprintf("%.0f", pct)), hjust = -0.15, size = 3, colour = "grey25") +
+  scale_alpha_manual(values = c(`TRUE` = 1, `FALSE` = 0.55), guide = "none") +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
+  facet_wrap(~era) +
+  labs(x = "% of respondents", y = NULL,
+       title = "The ideological middle emptied out",
+       subtitle = "Moderate/HTMA (darker) fell from 50% to ~35% as the poles filled") +
+  theme_minimal(base_size = 12) +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_blank(),
+        plot.title = element_text(face = "bold"),
+        strip.text = element_text(face = "bold"))
+```
+
+<details>
+<summary>Full replication grids (correlations, reliability, vote, by knowledge group)</summary>
+
+```{r}
+#| label: tbl-rep-t4-full
+#| tbl-cap: "Replication Table 4 analogue (2020): construct correlations by quiz-knowledge group."
+X_t4$table4_2020 |>
+  mutate(across(Full:Highest, ~round(.x,2))) |> select(-N) |>
+  gt() |> tab_header(title = "2020 correlations by knowledge group")
+```
+
+```{r}
+#| label: tbl-rep-t5-full
+#| tbl-cap: "Replication Table 5 analogue (2020): vote probit by merged voter knowledge group."
+X_t5$table5_2020 |>
+  mutate(across(Full:Highest, ~round(.x,2))) |> select(-H_div_L_R2) |>
+  gt() |> tab_header(title = "2020 vote probit coefficient / SE / pseudo-R²")
+```
+
+</details>
+
+### Verdicts
+
+Set against the four original headline claims, the picture is consistent across metrics
+(@tbl-rep-verdicts): the descriptive portrait shifted while the underlying knowledge mechanism
+persisted in weakened form.
+
+```{r}
+#| label: tbl-rep-verdicts
+#| tbl-cap: "The four original headline claims in 2020/2024."
+verd <- tibble::tibble(
+  `Original claim` = c(
+    "1. Polar/coherent/potent ideology only for the knowledgeable ~20–30%",
+    "2. Partisanship dominates ideology on every metric",
+    "3. Knowledge stratification is enormous (info-gain 1.6–11×)",
+    "4. Values carry the same knowledge-dependent limits as ideology"),
+  `Verdict in 2020/2024` = c(
+    "Not replicated as stated. The knowledge gradient persists, but the low-knowledge floor rose enough that ideology is no longer confined to a minority, though net of party the independent rise is small.",
+    "Replicated, though the gap narrowed.",
+    "Splits by metric. Breadth is roughly unchanged, having always been modest on a quiz, while vote potency is sharply reduced but not eliminated.",
+    "Replicated structurally. Values track ideology: all rise, and all flatten."),
+  `Key evidence` = c(
+    "Lowest-K ideology vote-R² .04→.25/.31; ideology×party corr lowest group .06→.59",
+    "Party÷ideology vote-R² 2.1×→1.4×; ideology stability .37→.64 nears party's .78",
+    "Vote-R² H÷L quiz ideology 10.5→~2.5/2.0; breadth H÷L quiz ideology 2.29→1.9",
+    "Avg corr egal .36→.54, MT .31→.53, parallel to ideology .39→.64")
+)
+verd |>
+  gt() |>
+  tab_header(title = "Two-sided result: the portrait is time-bound, the mechanism partly persists") |>
+  cols_align("left", columns = everything())
+```
+
+## GSS Conceptual Replication
+
+The GSS test asks whether the pattern recurs in a *different survey* with a *different knowledge proxy*
+(WORDSUM vocabulary), addressing the nomination's cross-dataset priority. The result is an instructive
+**depth-versus-breadth dissociation**. The depth gradients replicate almost identically. The
+ideology&times;party correlation rises from `r d2(G3$wordsum$Lowest[G3$wordsum$pair=="Ideology x Party"])`
+in the lowest WORDSUM group to `r d2(G3$wordsum$Highest[G3$wordsum$pair=="Ideology x Party"])` in the
+highest (full-sample `r d2(G3$wordsum$Full[G3$wordsum$pair=="Ideology x Party"])`), tracking Kalmoe's
+ANES interviewer-rating gradient of .06&rarr;.68 almost exactly. Policy-index reliability rises
+`r d2(G2$wordsum$Lowest[G2$wordsum$stat=="alpha"])`&rarr;`r d2(G2$wordsum$Highest[G2$wordsum$stat=="alpha"])`,
+and ideology's vote pseudo-R² is about 15&times; larger at the top
+(`r d2(G4$Highest[G4$predictor=="Ideology" & G4$stat=="pseudoR2"])`) than the bottom
+(`r d2(G4$Lowest[G4$predictor=="Ideology" & G4$stat=="pseudoR2"])`). Partisanship dominates ideology in
+*every* knowledge group with a comfortable margin: its vote pseudo-R² runs
+`r d2(G4$Lowest[G4$predictor=="Partisanship" & G4$stat=="pseudoR2"])` (lowest) to
+`r d2(G4$Highest[G4$predictor=="Partisanship" & G4$stat=="pseudoR2"])` (highest), against ideology's
+`r d2(G4$Lowest[G4$predictor=="Ideology" & G4$stat=="pseudoR2"])` and
+`r d2(G4$Highest[G4$predictor=="Ideology" & G4$stat=="pseudoR2"])`. Even in the top group, where
+ideology is strongest, partisanship leads by
+`r d2(G4$Highest[G4$predictor=="Partisanship" & G4$stat=="pseudoR2"] - G4$Highest[G4$predictor=="Ideology" & G4$stat=="pseudoR2"])`.
+This "every group" claim is a within-group comparison, not the full-sample partisanship value set
+against the top-group ideology value.
+
+The **breadth** gradient, by contrast, does not replicate: the ideology polar-half ratio is only
+`r d2(G1$wordsum$H_div_L[G1$wordsum$construct=="Ideology"])` with WORDSUM, and 1.40 with education,
+against Kalmoe's 4.0. The explanation is not a weak moderator, because the *same* WORDSUM bins produce
+a clean 7&times; correlation gradient and a 15&times; vote-potency gradient, so verbal ability tracks
+the depth metrics faithfully. What differs is the metric. GSS POLVIEWS offers no "haven't thought
+much" escape, and so forces a substantive 7-point placement, with only `r d1(G6$full*100)`% declining
+to place. Since RC2 showed the ANES breadth gradient is largely a nonresponse gradient, removing the
+nonresponse channel is exactly what should flatten it: low-knowledge respondents choose polar *labels*
+almost as often as sophisticates once they cannot opt out, but only among the knowledgeable do those
+labels cohere with party, policy, and the vote. Because breadth is primarily a nonresponse artefact,
+the strength of the knowledge proxy is beside the point for it; the proxy's strength is instead what
+lets it reproduce the depth gradients, which it does. The deeper and more consequential half of the
+thesis replicates cleanly across the dataset boundary.
+
+The GSS also shows the two-sided temporal story in one dataset. Full-sample ideology&times;party
+constraint tripled from the 1970s (.21) to the 2020s (.64), the well-documented partisan sort
+[@levendusky2009; @mason2018], yet the knowledge gap persists in every decade: even in the 2020s the
+bottom-knowledge correlation (.30) sits far below the top's (.77). Sorting raised the average without
+erasing stratification, so an unstratified 2020s snapshot still overstates ideological constraint for
+most citizens.
+
+## Discussion
+
+**What the original got right: nearly everything, reproducibly so.** The reproduction regenerates the
+published tables cell by cell from the same public data, and every substantive conclusion survives a
+demanding robustness suite that validates against the author's own supplement. The three anomalies are
+documentation-level: a probable N transposition, one unreproducible panel cell, and one undocumented
+panel item set. For a secondary-data paper with no code package, this is an unusually clean bill of
+health, and it should raise rather than lower confidence in the original analysis.
+
+**What is time-bound, and how much of it is sorting.** On the author's own tests, applied to data he
+never saw, the 2020s public looks markedly more ideological than the public he described. Coherence,
+polarity, stability, and bivariate vote potency all rose, and on those bivariate metrics the
+low-knowledge floor rose furthest, so the strong claim that meaningful ideology is confined to a
+knowledgeable minority does not hold as stated in 2020/2024. However, the party-controlled test
+qualifies what that rise means. Net of party identification, ideology's *independent* contribution to
+the vote did not grow overall (full-sample increment .03&ndash;.04 across every era) or at the
+low-knowledge floor, and the dramatic rise in low-knowledge ideological voting is almost entirely
+ideology's growing alignment with party rather than a new stratum of independent ideological
+constraint. The honest description is therefore that ideology and party became far more tightly
+aligned, especially where they used to diverge, rather than that everyone simply became more
+ideological. The gradient did compress, with the top-to-bottom vote-potency ratio falling from roughly
+10&times; to about 2&times; on pseudo-R² and, on the interpretable AME scale, below one. This is a
+change in the *shape* of the gradient, concentrated at the low end, rather than a uniform level shift:
+ideology rose at every knowledge level while the gains were largest at the bottom. The mechanism did
+not vanish either. Coherence remains stratified, a modest independent ideology effect persists at every
+level, and partisanship still leads every metric, consistent with the "party over ideology" literature
+[@barberpope2019; @mason2018].
+
+**Implications for the four best practices.** All four survive. Stratifying by knowledge still matters,
+since the gradient is compressed rather than gone, and an unstratified estimate still misleads.
+Convenience samples still over-represent the knowledgeable [@clifford2015]. Distinguishing ideology from
+partisanship matters more than ever: the two are now highly correlated, partisanship still leads on
+every metric, and conflating them risks attributing to ideology what party identity produces, as the
+party-controlled analysis above shows concretely. And full-sample estimates remain
+knowledge-conditioned. To these I would add three refinements that this project surfaces: **report how
+nonattitudes are handled**, since the breadth statistic is partly a nonresponse statistic (RC2, GSS);
+**prefer marginal effects to pseudo-R² ratios** when describing how strongly a predictor stratifies,
+since the two can differ by an order of magnitude (RC6c); and **beware that a knowledge quiz and an
+interviewer rating are not interchangeable stratifiers**, since the quiz yields systematically shallower
+gradients, so cross-era comparisons must be measure-matched.
+
+**Limitations.** Several constraints bound these conclusions. The replication's knowledge measure is a
+quiz rather than the interviewer rating (handled by the quiz-versus-quiz benchmark, though a residual
+instrument difference remains); 2020 and 2024 are single elections compared against multi-year pools
+(which can inflate the apparent jump, though the 2008&ndash;2016 pool bounds this); the mode shifted to
+web without an interviewer to probe nonresponse (its effect on HTMA/DK is modest but not separable from
+the era); the value batteries are reduced (handled via matched items and covariance); the analysis is
+single-country except for the GSS; and two panel rows are reconstructions rather than exact
+reproductions. The headline ratios are also imprecise, since they divide two pseudo-R² values estimated
+in subsamples. A nonparametric bootstrap of the 2020 ideology Highest&divide;Lower vote-potency ratio
+(`r V_G$B` draws; Lower $n = `r format(V_G$n_lower, big.mark=",")`$, Highest
+$n = `r format(V_G$n_highest, big.mark=",")`$) puts the point estimate `r d2(V_G$point)` in a 95%
+interval of `r d2(V_G$ci[1])`&ndash;`r d2(V_G$ci[2])`, well below the original era's ~10&times; but too
+wide to distinguish the 2020 ratio sharply from the 2024 one. The ratios should therefore be read as
+order-of-magnitude compressions rather than precise point estimates. None of these undoes the direction
+or rough magnitude of the results, all of which were independently verified.
+
+## Reproducibility Statement
+
+All analyses run in R 4.5.3 [@rcoreteam] with `dplyr`, `tidyr`, `psych` [@rpsych], `sandwich`
+[@rsandwich], `MASS`, and `marginaleffects`; tables and figures here use `gt` and `ggplot2`. Every
+pipeline is deterministic (no randomness) and was verified to regenerate byte-identically. The full chain
+runs from the project root:
+
+```
+Rscript R/01_prepare_cdf.R        # ANES CDF → cdf_analysis.rds
+Rscript R/02_reproduce_main.R     # Tables 1,2,4,5, Fig 1, footnote 5, in-text
+Rscript R/03_robustness.R         # RC1–RC8
+Rscript R/04_panels.R             # Table 3 (panels)
+Rscript R/05_gss.R                # GSS conceptual replication
+Rscript R/06_replication_anes.R   # ANES 2020/2024 + panel
+Rscript R/07_revision.R           # post-review analyses → output/revision/*.rds
+# Independent verification pass (§2.4): hand-rolled recomputation of every headline
+Rscript output/verification/v_reproduction.R
+Rscript output/verification/v_robustness.R
+Rscript output/verification/v_panels.R
+Rscript output/verification/v_replication.R
+Rscript output/verification/v_gss.R
+quarto render manuscript/manuscript.qmd
+```
+
+Data sources: ANES Cumulative Data File (1948&ndash;2016 vintage via the `anesr` mirror; 1948&ndash;2024
+subset via SDA Berkeley, accessed 2026-07-03), the ANES 1990&ndash;92 / 1992&ndash;96 / 2000&ndash;02
+panels, the 2024 knowledge battery and 2016&ndash;20&ndash;24 panel link (SDA), and the GSS 1972&ndash;2024
+Cumulative Datafile (SDA). This manuscript reads only the precomputed `.rds` outputs, so it renders quickly
+and independently of the analysis scripts. Repository layout: `R/` (numbered pipeline), `data/raw/`
+(downloaded subsets), `output/` (per-module `.rds`, `comparison.csv`, and reports), `notes/` (decisions log
+and data provenance), `manuscript/` (this document and `references.bib`). No original code or data package
+exists for Kalmoe (2020); the pipeline reconstructs the analysis from the paper and its author-hosted online
+supplement.
+
+## Workflow and AI-Assistance Statement {.unnumbered}
+
+The empirical work reported here was executed by an AI-agent workflow (Anthropic's Claude, via Claude Code)
+under the direction and review of the human author. The agents located and downloaded the public data,
+reconstructed the analysis pipeline, adjudicated unstated methodological choices against the anchors the
+original tables supply, ran an independent adversarial verification of every headline number (which found
+and corrected one bug, reported in §3&ndash;4), and drafted this manuscript from the resulting outputs. The
+human author defined the scope and framing, made the consequential judgment calls, and is responsible for
+the content. Every quantitative claim in the text is loaded programmatically from, or checked against, the
+precomputed analysis outputs rather than written from memory. This disclosure is offered in the spirit of
+the transparency norms the FORRT initiative promotes [@forrt_nomination; @freese2017].
+
+This manuscript was subsequently revised in response to an automated peer review generated by a
+"coarse" review pipeline (a structured, multi-stage critique run with a local model). The full review is
+archived at `coarse-output/manuscript_review.md`. In response, six new analyses were added &mdash; the
+party-controlled ("sorting versus constraint") vote models, AME-based stratification ratios, panel
+attrition and reweighting, breadth with and without nonattitudes, a within-2020 mode comparison, and a
+set of smaller checks &mdash; all in `R/07_revision.R` (outputs in `output/revision/`), and the
+interpretive claims were tightened accordingly. The revision changed one headline emphasis on the
+evidence: the party-controlled test showed that ideology's independent vote contribution did not rise,
+so the "time-bound" reading is now qualified as substantially an ideology&ndash;party alignment shift.
+
+## References {.unnumbered}
